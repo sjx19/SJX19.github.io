@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图形分类小游戏</title>
+    <style>
+        body {
+            font-family: "微软雅黑", sans-serif;
+            text-align: center;
+            background-color: #fff3e0;
+            padding-top: 30px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .shape {
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .shape:hover {
+            transform: scale(1.1);
+        }
+        .circle { border-radius: 50%; background: #ef5350; }
+        .square { background: #66bb6a; }
+        .triangle {
+            width: 0; height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 80px solid #42a5f5;
+            background: transparent;
+        }
+        #feedback {
+            font-size: 20px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>图形分类：点击圆形</h2>
+        <div class="shape circle" onclick="check(this, 'circle')"></div>
+        <div class="shape square" onclick="check(this, 'square')"></div>
+        <div class="shape triangle" onclick="check(this, 'triangle')"></div>
+        <div class="shape circle" onclick="check(this, 'circle')"></div>
+        <div class="shape square" onclick="check(this, 'square')"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const feedbackEl = document.getElementById('feedback');
+        let count = 0;
+
+        function check(el, type) {
+            if (type === 'circle') {
+                el.style.opacity = '0.3';
+                el.style.pointerEvents = 'none';
+                count++;
+                feedbackEl.innerText = `找到 ${count} 个圆形啦！`;
+                feedbackEl.style.color = 'green';
+            } else {
+                feedbackEl.innerText = ' 不是这个哦，再找找看！';
+                feedbackEl.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>
+

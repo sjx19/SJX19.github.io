@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>植树问题 交互练习</title>
+    <style>
+        *{margin: 0;padding: 0;box-sizing: border-box;font-family: "微软雅黑",sans-serif;}
+        body{background: #f0f8ff;padding: 30px;text-align: center;}
+        .box{background: #fff;width: 90%;max-width: 800px;margin: 0 auto;padding: 25px;border-radius: 16px;box-shadow: 0 3px 15px #cce0f5;}
+        h2{color: #2c5282;margin-bottom: 20px;}
+        .type{font-size: 18px;color: #333;margin: 10px 0;}
+        .draw-area{height: 120px;border: 1px solid #bcd;line-height: 120px;margin: 15px 0;border-radius: 8px;overflow: hidden;}
+        .tree{display: inline-block;font-size: 28px;margin: 0 2px;}
+        .input-box{margin: 20px 0;}
+        input{width: 120px;height: 40px;font-size: 18px;border: 2px solid #4299e1;border-radius: 6px;padding-left: 10px;margin: 0 10px;}
+        button{padding: 10px 20px;font-size: 16px;border: none;border-radius: 6px;background: #3182ce;color: #fff;cursor: pointer;margin: 5px;}
+        button:hover{background: #2b6cb0;}
+        .tip{font-size: 18px;margin-top: 15px;font-weight: bold;min-height: 25px;}
+        .right{color: #2f855a;}
+        .error{color: #e53e3e;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>数学重难点：植树问题</h2>
+        <div class="type" id="typeText">题型：两端都种树</div>
+        <div id="desc">道路总长50米，每隔5米种一棵树，一共要种几棵树？</div>
+
+        <!-- 画图演示区域 -->
+        <div class="draw-area" id="showTree"></div>
+
+        <div class="input-box">
+            <span>答案：</span>
+            <input type="number" id="ans">
+            <button onclick="checkAnswer()">提交答案</button>
+            <button onclick="changeType()">切换题型</button>
+            <button onclick="resetQ()">重新出题</button>
+        </div>
+        <div class="tip" id="tipText"></div>
+    </div>
+
+    <script>
+        // 三种题型 0两端栽 1一端栽 2两端不栽
+        let nowType = 0;
+        let totalLen, space, realAns;
+
+        // 初始化出题
+        function resetQ(){
+            document.getElementById('tipText').innerText = '';
+            document.getElementById('ans').value = '';
+            // 随机数值
+            totalLen = Math.floor(Math.random()*40)+40;
+            space = Math.floor(Math.random()*6)+4;
+            let section = Math.floor(totalLen / space);
+
+            // 判断题型计算标准答案
+            switch(nowType){
+                case 0:
+                    realAns = section + 1;
+                    document.getElementById('typeText').innerText = '题型：两端都种树';
+                    break;
+                case 1:
+                    realAns = section;
+                    document.getElementById('typeText').innerText = '题型：只种一端';
+                    break;
+                case 2:
+                    realAns = section - 1;
+                    document.getElementById('typeText').innerText = '题型：两端都不种树';
+                    break;
+            }
+            document.getElementById('desc').innerText =
+                `道路总长${totalLen}米，每隔${space}米种一棵树，一共要种几棵树？`;
+            drawTree(section);
+        }
+
+        // 简易绘制树木示意图
+        function drawTree(sec){
+            let html = '';
+            for(let i=0; i<=sec; i++){
+                if(nowType===0){
+                    html += '<span class="tree"></span>';
+                }else if(nowType===1){
+                    if(i!==sec) html += '<span class="tree"></span>';
+                }else{
+                    if(i!==0 && i!==sec) html += '<span class="tree"></span>';
+                }
+            }
+            document.getElementById('showTree').innerHTML = html;
+        }
+
+        // 切换题型
+        function changeType(){
+            nowType = (nowType + 1) % 3;
+            resetQ();
+        }
+
+        // 校验答案
+        function checkAnswer(){
+            let user = parseInt(document.getElementById('ans').value);
+            let tip = document.getElementById('tipText');
+            if(isNaN(user)){
+                tip.innerText = '请输入数字答案！';
+                tip.className = 'tip error';
+                return;
+            }
+            if(user === realAns){
+                tip.innerText = `回答正确！总棵数为${realAns}棵`;
+                tip.className = 'tip right';
+            }else{
+                tip.innerText = `回答错误，正确答案：${realAns}棵`;
+                tip.className = 'tip error';
+            }
+        }
+
+        // 页面加载自动出题
+        window.onload = resetQ;
+    </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+ <html lang="zh-CN">
+ <head>
+     <meta charset="UTF-8">
+     <title>植树问题动态探索工具</title>
+     <style>
+         * {
+             margin: 0;
+             padding: 0;
+             box-sizing: border-box;
+             font-family: "微软雅黑", sans-serif;
+         }
+         body {
+             background-color: #f5f9f5;
+             min-height: 100vh;
+         }
+         .header {
+             background-color: #34b734;
+             color: white;
+             text-align: center;
+             padding: 15px;
+             font-size: 22px;
+             font-weight: bold;
+         }
+         .tabs {
+             display: flex;
+             justify-content: center;
+             gap: 10px;
+             padding: 15px 0;
+         }
+         .tab-btn {
+             padding: 8px 16px;
+             border: none;
+             border-radius: 20px;
+             background-color: #e0e0e0;
+             cursor: pointer;
+             font-size: 14px;
+         }
+         .tab-btn.active {
+             background-color: #34b734;
+             color: white;
+         }
+         .container {
+             display: flex;
+             width: 98%;
+             margin: 0 auto;
+             gap: 15px;
+             padding: 0 10px;
+         }
+         .panel {
+             width: 320px;
+             background: white;
+             border-radius: 10px;
+             padding: 20px;
+             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+             flex-shrink: 0;
+         }
+         .panel h3 {
+             color: #2d7d2d;
+             margin-bottom: 15px;
+             font-size: 16px;
+         }
+         .tip {
+             background: #e8f5e8;
+             padding: 10px;
+             border-radius: 6px;
+             font-size: 13px;
+             margin-bottom: 20px;
+             color: #2d7d2d;
+         }
+         .param {
+             margin: 15px 0;
+             font-size: 15px;
+         }
+         .param span {
+             display: inline-block;
+             width: 100px;
+         }
+         .param input {
+             width: 80px;
+             padding: 5px;
+             border: 1px solid #ccc;
+             border-radius: 4px;
+         }
+         .result-box {
+             margin-top: 20px;
+             padding: 15px;
+             background: #f0f8f0;
+             border-radius: 8px;
+         }
+         .result {
+             font-size: 18px;
+             font-weight: bold;
+             margin: 10px 0;
+         }
+         .canvas-area {
+             flex: 1;
+             min-height: 420px;
+             background: white;
+             border-radius: 10px;
+             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+             overflow: hidden;
+         }
+         canvas {
+             display: block;
+             width: 100%;
+             height: 100%;
+         }
+     </style>
+ </head>
+ <body>
+<div class="header">植树问题动态探索工具</div>
+     <div class="tabs">
+         <button class="tab-btn active" data-type="both">两端都栽</button>
+         <button class="tab-btn" data-type="one">只栽一端</button>
+         <button class="tab-btn" data-type="none">两端都不栽</button>
+     </div>
+     <div class="container">
+         <div class="panel">
+             <h3>动态参数观察</h3>
+             <div class="tip">
+                  拖动道路端点，修改长度与间隔，直观观察棵数变化规律
+             </div>
+             <div class="param">
+                 <span>道路总长：</span>
+                 <input type="number" id="length" value="100" min="10" max="200"> 米
+             </div>
+             <div class="param">
+                 <span>间隔距离：</span>
+                 <input type="number" id="space" value="10" min="1" max="20"> 米
+             </div>
+             <div class="result-box">
+                 <div>间隔数：<span id="section">10</span> 个</div>
+                 <div class="result" id="result">棵数：11 棵</div>
+                 <div id="formula" style="color:#34b734; font-size:14px; margin-top:10px;">公式：棵数 = 间隔数 + 1</div>
+             </div>
+         </div>
+         <div class="canvas-area">
+             <canvas id="treeCanvas"></canvas>
+         </div>
+     </div>
+     <script>
+         const canvas = document.getElementById('treeCanvas');
+         const ctx = canvas.getContext('2d');
+         const lengthInput = document.getElementById('length');
+         const spaceInput = document.getElementById('space');
+         const sectionEl = document.getElementById('section');
+         const resultEl = document.getElementById('result');
+         const formulaEl = document.getElementById('formula');
+         const tabBtns = document.querySelectorAll('.tab-btn');
+         let roadY = 200;
+         let roadStartX = 60;
+         let roadEndX = 360;
+         let space = 10;
+         let type = 'both';
+         let dragPoint = null;
+         const scale = 3;
+         function resizeCanvas() {
+             const area = document.querySelector('.canvas-area');
+             canvas.width = area.clientWidth;
+             canvas.height = area.clientHeight;
+             roadY = canvas.height / 2;
+             draw();
+         }
+         window.addEventListener('resize', resizeCanvas);
+         resizeCanvas();
+         tabBtns.forEach(btn => {
+             btn.addEventListener('click', () => {
+                 tabBtns.forEach(b => b.classList.remove('active'));
+                 btn.classList.add('active');
+                 type = btn.dataset.type;
+                 updateFormula();
+                 draw();
+             });
+         });
+         lengthInput.addEventListener('change', () => {
+             let newLen = parseInt(lengthInput.value);
+             newLen = Math.max(10, Math.min(200, newLen));
+             lengthInput.value = newLen;
+             roadEndX = roadStartX + newLen * scale;
+             draw();
+         });
+         spaceInput.addEventListener('change', () => {
+             let newSpace = parseInt(spaceInput.value);
+             space = Math.max(1, Math.min(20, newSpace));
+             spaceInput.value = space;
+             draw();
+         });
+         canvas.addEventListener('mousedown', e => {
+             const rect = canvas.getBoundingClientRect();
+             const x = e.clientX - rect.left;
+             const y = e.clientY - rect.top;
+             if (Math.hypot(x - roadStartX, y - roadY) < 15) dragPoint = 'start';
+             else if (Math.hypot(x - roadEndX, y - roadY) < 15) dragPoint = 'end';
+         });
+         canvas.addEventListener('mousemove', e => {
+             if (!dragPoint) return;
+             const rect = canvas.getBoundingClientRect();
+             const x = e.clientX - rect.left;
+             if (dragPoint === 'start' && x < roadEndX - 40) roadStartX = Math.max(20, x);
+             if (dragPoint === 'end' && x > roadStartX + 40) roadEndX = Math.min(canvas.width - 20, x);
+             lengthInput.value = Math.round((roadEndX - roadStartX) / scale);
+             draw();
+         });
+         canvas.addEventListener('mouseup', () => dragPoint = null);
+         canvas.addEventListener('mouseleave', () => dragPoint = null);
+         function updateFormula() {
+             switch (type) {
+                 case 'both': formulaEl.innerText = '公式：棵数 = 间隔数 + 1'; break;
+                 case 'one': formulaEl.innerText = '公式：棵数 = 间隔数'; break;
+                 case 'none': formulaEl.innerText = '公式：棵数 = 间隔数 - 1'; break;
+             }
+         }
+       function draw() {
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+             ctx.beginPath();
+             ctx.moveTo(roadStartX, roadY);
+             ctx.lineTo(roadEndX, roadY);
+             ctx.strokeStyle = '#666';
+             ctx.lineWidth = 4;
+             ctx.stroke();
+             let actualLen = Math.round((roadEndX - roadStartX) / scale);
+             let sectionCount = Math.floor(actualLen / space);
+             sectionEl.innerText = sectionCount;
+             let treeCount;
+             switch (type) {
+                 case 'both': treeCount = sectionCount + 1; break;
+                 case 'one': treeCount = sectionCount; break;
+                 case 'none': treeCount = sectionCount - 1; break;
+             }
+             resultEl.innerText = `棵数：${treeCount} 棵`;
+             ctx.fillStyle = '#3498db';
+             ctx.beginPath();
+             ctx.arc(roadStartX, roadY, 8, 0, Math.PI * 2);
+             ctx.fill();
+             ctx.beginPath();
+             ctx.arc(roadEndX, roadY, 8, 0, Math.PI * 2);
+             ctx.fill();
+             ctx.font = '26px Arial';
+             ctx.textAlign = 'center';
+             for (let i = 0; i <= sectionCount; i++) {
+                 let x = roadStartX + i * space * scale;
+                 if (x > roadEndX) break;
+                 if (i > 0) {
+                     ctx.setLineDash([3,3]);
+                     ctx.strokeStyle = '#aaa';
+                     ctx.lineWidth = 1;
+                     ctx.beginPath();
+                     ctx.moveTo(x - space * scale, roadY - 25);
+                     ctx.lineTo(x, roadY - 25);
+                     ctx.stroke();
+                     ctx.setLineDash([]);
+                 }
+                 let drawTree = false;
+                 if(type === 'both') drawTree = true;
+                 if(type === 'one') drawTree = i !== sectionCount;
+                 if(type === 'none') drawTree = i !== 0 && i !== sectionCount;
+                 if(drawTree) ctx.fillText('', x, roadY - 35);
+             }
+             ctx.font = '14px sans-serif';
+             ctx.fillStyle = '#333';
+             ctx.fillText(`${actualLen}米`, (roadStartX+roadEndX)/2, roadY+35);
+         }
+         updateFormula();
+         draw();
+     </script>
+ </body>
+ </html>
+
+

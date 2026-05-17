@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小学数学加法练习</title>
+    <style>
+        body {
+            font-family: "微软雅黑", sans-serif;
+            text-align: center;
+            background-color: #e3f2fd;
+            padding-top: 50px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 32px;
+            margin: 20px 0;
+        }
+        input {
+            font-size: 24px;
+            width: 100px;
+            text-align: center;
+            padding: 5px;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+        }
+        button {
+            font-size: 18px;
+            padding: 8px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        #feedback {
+            font-size: 20px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>加法小练习</h2>
+        <div class="question" id="question"></div>
+        <input type="number" id="answer" placeholder="输入答案">
+        <br>
+        <button onclick="checkAnswer()">提交</button>
+        <button onclick="newQuestion()">换一题</button>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        let num1, num2;
+        const questionEl = document.getElementById('question');
+        const answerEl = document.getElementById('answer');
+        const feedbackEl = document.getElementById('feedback');
+
+        // 生成新题目
+        function newQuestion() {
+            num1 = Math.floor(Math.random() * 20) + 1;
+            num2 = Math.floor(Math.random() * 20) + 1;
+            questionEl.innerText = `${num1} + ${num2} = ?`;
+            answerEl.value = '';
+            feedbackEl.innerText = '';
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            const userAnswer = parseInt(answerEl.value);
+            if (userAnswer === num1 + num2) {
+                feedbackEl.innerText = ' 回答正确！';
+                feedbackEl.style.color = 'green';
+            } else {
+                feedbackEl.innerText = ` 不对哦，正确答案是 ${num1 + num2}`;
+                feedbackEl.style.color = 'red';
+            }
+        }
+
+        // 页面加载时生成第一题
+        newQuestion();
+    </script>
+</body>
+</html>
